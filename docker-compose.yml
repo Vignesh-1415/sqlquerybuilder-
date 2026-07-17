@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  server:
+    build: ./server
+    container_name: statement-server
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - NODE_ENV=production
+      - ALLOWED_ORIGINS=http://localhost:8080
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_MODEL=${GROQ_MODEL:-llama-3.1-8b-instant}
+      - DATA_DIR=/app/data
+      - UPLOADS_DIR=/app/uploads
+      - MAX_UPLOAD_MB=15
+      - MAX_RESULT_ROWS=200
+      - SESSION_TTL_HOURS=24
+    volumes:
+      - statement_data:/app/data
+      - statement_uploads:/app/uploads
+    restart: unless-stopped
+
+  client:
+    image: nginx:alpine
+    container_name: statement-client
+    ports:
+      - "8080:80"
+    volumes:
+      - ./client:/usr/share/nginx/html:ro
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  statement_data:
+  statement_uploads:
